@@ -1,0 +1,54 @@
+# Große Modell-Dateien (>100MB) ausschließen
+models/
+core
+*.bin
+*.pth
+*.ckpt
+*.safetensors
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual Environment
+venv/
+venv_new/
+env/
+ENV/
+
+# IDE/Editor Dateien
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Temporäre Dateien
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Logs
+*.log
+logs/
+
+# Session-Daten können groß werden
+sessions/
+transcripts/
+
+# Audio-Cache
+audio_cache/
+*.wav
+*.mp3
+*.m4a
+
+# Hugging Face Cache
+.cache/
