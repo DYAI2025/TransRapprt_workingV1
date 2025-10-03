@@ -170,11 +170,16 @@ class LiveTranscriber(QObject):
                 # Transkription verarbeiten
                 self._process_transcription_queue()
                 
+            except queue.Empty:
+                continue
             except Exception as e:
                 error_msg = f"Fehler in Transkriptions-Loop: {e}"
                 print(error_msg)
                 self.error_occurred.emit(error_msg)
-                break
+                import traceback
+                traceback.print_exc()
+                time.sleep(0.5)
+                continue
         
         print("Live-Transkriptions-Loop beendet")
     

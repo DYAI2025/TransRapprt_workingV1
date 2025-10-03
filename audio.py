@@ -6,10 +6,11 @@ TransRapport MVP - Audio-Management
 Mikrofon-Erkennung und Audio-Stream-Verwaltung für Live-Transkription
 """
 
-import sounddevice as sd
 import numpy as np
-import threading
+import sounddevice as sd
 import queue
+from datetime import datetime
+import time
 from typing import List, Dict, Optional
 
 class AudioManager:
@@ -87,7 +88,7 @@ class AudioManager:
             except Exception as e:
                 print(f"Fehler im Audio-Callback: {e}")
     
-    def start_recording(self, device_index: int = None):
+    def start_recording(self, device_index: Optional[int] = None):
         """Audio-Aufnahme für Live-Transkription starten - REPARIERT"""
         try:
             if self.is_recording:
@@ -231,7 +232,7 @@ class AudioManager:
             print(f"Fehler bei Audio-Level-Berechnung: {e}")
             return 0.0
     
-    def test_microphone(self, device_index: int = None, duration: float = 2.0) -> bool:
+    def test_microphone(self, device_index: Optional[int] = None, duration: float = 2.0) -> bool:
         """Mikrofon testen"""
         try:
             print(f"Teste Mikrofon für {duration} Sekunden...")

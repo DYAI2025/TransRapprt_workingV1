@@ -65,6 +65,11 @@ class TransRapportMainWindow(QMainWindow):
         }
         self.max_data_points = 100  # Maximale Anzahl Datenpunkte für Visualisierung
         
+        # Plot-Update-Konfiguration
+        self.plot_update_rate = 100  # Millisekunden (10 Hz) (important-comment)
+        self.last_plot_update = datetime.now()
+        self.plot_enabled = True  # Toggle für Plot-System (important-comment)
+        
     def load_config(self):
         """Konfiguration aus config.ini laden"""
         self.config = configparser.ConfigParser()
@@ -936,7 +941,7 @@ class TransRapportMainWindow(QMainWindow):
             self.marker_data['pitch'].append(pitch)
             self.marker_data['energy'].append(energy)
         
-        # Plots aktualisieren
+        # Plots aktualisieren (mit Throttling) (important-comment)
         self.update_marker_plots()
         
         # Statistiken aktualisieren
@@ -987,10 +992,70 @@ class TransRapportMainWindow(QMainWindow):
         pass
     
     def update_marker_plots(self):
-        """Marker-Plots aktualisieren - TEMPORÄR DEAKTIVIERT"""
-        # KRITISCHER FIX: Plots komplett deaktiviert um CPU-Überlastung zu stoppen
-        # TODO: Plots sicher neu implementieren nach Audio-Fix
-        return
+        """Marker-Plots aktualisieren - MIT SICHERHEITS-CHECKS"""
+        if not self.plot_enabled:
+            return
+        
+        # Throttle updates to prevent CPU overload
+        now = datetime.now()
+        if (now - self.last_plot_update).total_seconds() * 1000 < self.plot_update_rate:
+            return
+        
+        self.last_plot_update = now
+        
+        try:
+            # Emotion-Plot aktualisieren (Valenz über Zeit)
+            if self.marker_data['timestamps'] and self.marker_data['emotions']:
+                timestamps = self.marker_data['timestamps'][-self.max_data_points:]
+                emotions = self.marker_data['emotions'][-self.max_data_points:]
+                
+                # Daten bereinigen (NaN/Inf entfernen)
+                valid_data = [(t, e) for t, e in zip(timestamps, emotions) if np.isfinite(e)]
+                if valid_data:
+                    valid_timestamps, valid_emotions = zip(*valid_data)
+                    x_data = np.arange(len(valid_timestamps))
+                    y_data = np.array(valid_emotions, dtype=np.float64)
+                    
+                    self.emotion_plot.clear()
+                    self.emotion_plot.plot(x_data, y_data, pen='c', symbol='o', symbolSize=5)
+                    self.emotion_plot.setLabel('left', 'Valenz', color='#ffffff')
+                    self.emotion_plot.setLabel('bottom', 'Zeit', color='#ffffff')
+            
+            # Pausen-Plot aktualisieren
+            if self.marker_data['pauses']:
+                pauses = self.marker_data['pauses'][-self.max_data_points:]
+                valid_pauses = [p for p in pauses if np.isfinite(p)]
+                if valid_pauses:
+                    x_data = np.arange(len(valid_pauses))
+                    y_data = np.array(valid_pauses, dtype=np.float64)
+                    
+                    self.pause_plot.clear()
+                    self.pause_plot.plot(x_data, y_data, pen='y', symbol='s', symbolSize=5)
+                    self.pause_plot.setLabel('left', 'Dauer (s)', color='#ffffff')
+                    self.pause_plot.setLabel('bottom', 'Ereignis', color='#ffffff')
+            
+            # Pitch-Plot aktualisieren
+            if self.marker_data['pitch']:
+                pitches = self.marker_data['pitch'][-self.max_data_points:]
+                valid_pitches = [p for p in pitches if np.isfinite(p) and p > 0]
+                if valid_pitches:
+                    x_data = np.arange(len(valid_pitches))
+                    y_data = np.array(valid_pitches, dtype=np.float64)
+                    
+                    self.pitch_plot.clear()
+                    self.pitch_plot.plot(x_data, y_data, pen='g', symbol='t', symbolSize=5)
+                    self.pitch_plot.setLabel('left', 'Pitch (Hz)', color='#ffffff')
+                    self.pitch_plot.setLabel('bottom', 'Zeit', color='#ffffff')
+                    
+        except Exception as e:
+            print(f"⚠️  Fehler beim Plot-Update (nicht kritisch): {e}")
+            # Bei wiederholten Fehlern Plots deaktivieren
+            if not hasattr(self, 'plot_error_count'):
+                self.plot_error_count = 0
+            self.plot_error_count += 1
+            if self.plot_error_count > 10:
+                print("❌ Plot-System deaktiviert nach zu vielen Fehlern")
+                self.plot_enabled = False
     
     def update_marker_statistics(self):
         """Marker-Statistiken aktualisieren"""
@@ -1208,11 +1273,11 @@ class TransRapportMainWindow(QMainWindow):
         
         try:
             if platform.system() == "Windows":
-                os.startfile(export_dir)
+                os.startfile(export_dir)  # type: ignore[attr-defined]
             elif platform.system() == "Darwin":  # macOS
-                subprocess.run(["open", export_dir])
+                subprocess.run(["open", export_dir], check=True)
             else:  # Linux
-                subprocess.run(["xdg-open", export_dir])
+                subprocess.run(["xdg-open", export_dir], check=True)
         except Exception as e:
             QMessageBox.information(self, "Export-Ordner", f"Export-Ordner: {export_dir}")
     
@@ -1225,11 +1290,11 @@ class TransRapportMainWindow(QMainWindow):
         
         try:
             if platform.system() == "Windows":
-                os.startfile(sessions_dir)
+                os.startfile(sessions_dir)  # type: ignore[attr-defined]
             elif platform.system() == "Darwin":  # macOS
-                subprocess.run(["open", sessions_dir])
+                subprocess.run(["open", sessions_dir], check=True)
             else:  # Linux
-                subprocess.run(["xdg-open", sessions_dir])
+                subprocess.run(["xdg-open", sessions_dir], check=True)
         except Exception as e:
             QMessageBox.information(self, "Sessions-Ordner", f"Sessions-Ordner: {sessions_dir}")
     
