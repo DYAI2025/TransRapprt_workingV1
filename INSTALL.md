@@ -86,6 +86,33 @@ pip install -r requirements.txt
 
 **Das kann einige Minuten dauern.** Die Installation lädt alle benötigten Komponenten herunter.
 
+### Schritt 5.5: PortAudio installieren (System-Abhängigkeit)
+
+**WICHTIG**: TransRapport benötigt die PortAudio-Bibliothek für Audio-Aufnahme.
+
+#### Windows
+PortAudio ist normalerweise über pip-Abhängigkeiten enthalten, aber falls Fehler auftreten:
+1. Laden Sie PortAudio von http://www.portaudio.com/download.html herunter
+2. Installieren Sie es in Ihrem System
+
+#### Ubuntu/Debian (Linux)
+```bash
+sudo apt-get update
+sudo apt-get install portaudio19-dev
+pip install --force-reinstall sounddevice
+```
+
+#### macOS
+```bash
+brew install portaudio
+pip install --force-reinstall sounddevice
+```
+
+**Überprüfung**: Nach der Installation sollte folgender Befehl ohne Fehler laufen:
+```bash
+python -c "import sounddevice as sd; print(sd.query_devices())"
+```
+
 ### Schritt 6: FFmpeg installieren
 
 #### Windows

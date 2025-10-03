@@ -81,7 +81,7 @@ class MarkerSystem(QObject):
         self.energy_history = []
         print("Marker-System gestoppt")
     
-    def process_audio_chunk(self, audio_data: np.ndarray, timestamp: datetime = None) -> Dict:
+    def process_audio_chunk(self, audio_data: np.ndarray, timestamp: Optional[datetime] = None) -> Dict:
         """
         Audio-Chunk verarbeiten und Marker extrahieren
         
@@ -134,7 +134,7 @@ class MarkerSystem(QObject):
         
         return self.current_markers
     
-    def process_transcript(self, text: str, timestamp: datetime = None):
+    def process_transcript(self, text: str, timestamp: Optional[datetime] = None):
         """
         Transkript verarbeiten für zusätzliche Marker-Informationen
         
